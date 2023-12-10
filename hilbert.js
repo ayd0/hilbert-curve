@@ -5,11 +5,14 @@ document.addEventListener("DOMContentLoaded", function() {
     const width = canvas.width;
     const height = canvas.height;
 
-    const order = 6;
+    const order = 8;
     const N = Math.pow(2, order);
     const total = N * N;
-
     const path = new Array(total);
+
+    // modifiers
+    const lineWidth = 1;
+    const mode = 0;
 
     const hilbert = (i) => {
         // pick point in 1st order
@@ -90,9 +93,36 @@ document.addEventListener("DOMContentLoaded", function() {
         ctx.stroke();
         ctx.closePath();
 
-        ctx.lineWidth = 10;
+        ctx.lineWidth = lineWidth;
         let i = 1;
         if (mode === 0) {
+            let pathIdx = path.map((e, idx) => idx + 1);
+            console.log(pathIdx);
+            const rDraw = () => {
+                const [r, g, b] = hslRGB(hue / 360, sat, light);
+                if (i < total) {
+                    const rndIdx = Math.floor(Math.random() * (pathIdx.length - 1));
+                    const idx = pathIdx[rndIdx];
+                    pathIdx.splice(rndIdx, 1);
+                    console.log(idx, pathIdx.length, total)
+                    ctx.beginPath();
+                    ctx.strokeStyle = `rgb(${r}, ${g}, ${b})`;
+                    ctx.moveTo(path[idx - 1][0], path[idx - 1][1]);
+                    ctx.lineTo(path[idx][0], path[idx][1]);
+                    ctx.stroke();
+                    ctx.closePath();
+                    i++;
+
+                    // hue = (hue + .5) % 90;
+                    hue = hue + (1 / total * 180);
+
+                    requestAnimationFrame(rDraw);
+                } else {
+                    ctx.closePath();
+                }
+            }
+            rDraw();
+        } else if (mode === 1) {
             const rDraw = () => {
                 const [r, g, b] = hslRGB(hue / 360, sat, light);
                 if (i < total) {
@@ -103,8 +133,9 @@ document.addEventListener("DOMContentLoaded", function() {
                     ctx.stroke();
                     ctx.closePath();
                     i++;
-                    
-                    hue = (hue + .5) % 90;
+
+                    // hue = (hue + .5) % 90;
+                    hue = hue + (1 / total * 180);
 
                     requestAnimationFrame(rDraw);
                 } else {
@@ -112,39 +143,38 @@ document.addEventListener("DOMContentLoaded", function() {
                 }
             }
             rDraw();
-        } else if (mode === 1) {
+        } else if (mode === 2) {
             let l = 1;
             for (let k = 0; k < 100; ++k) {
                 setTimeout(() => {
-                for (let i = 1; i < path.length; ++i) {
-                    const [r, g, b] = hslRGB(hue / 360, sat, light);
-                    ctx.beginPath();
-                    ctx.strokeStyle = `rgb(${r}, ${g}, ${b})`;
-                    ctx.moveTo(path[i - 1][0], path[i - 1][1]);
-                    ctx.lineTo(path[i][0], path[i][1]);
-                    ctx.stroke();
-                    ctx.closePath();
+                    for (let i = 1; i < path.length; ++i) {
+                        const [r, g, b] = hslRGB(hue / 360, sat, light);
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgb(${r}, ${g}, ${b})`;
+                        ctx.moveTo(path[i - 1][0], path[i - 1][1]);
+                        ctx.lineTo(path[i][0], path[i][1]);
+                        ctx.stroke();
+                        ctx.closePath();
+                        hue = (hue + 10) % 100;
+                        hue += 200 
+                        ++l
+                    }
+                }, k * 500)
+            }
+        } else if (mode === 3) {
+            for (let i = 1; i < path.length; ++i) {
+                const [r, g, b] = hslRGB(hue / 360, sat, light);
+                ctx.beginPath();
+                ctx.strokeStyle = `rgb(${r}, ${g}, ${b})`;
+                ctx.moveTo(path[i - 1][0], path[i - 1][1]);
+                ctx.lineTo(path[i][0], path[i][1]);
+                ctx.stroke();
+                ctx.closePath();
 
-                    hue = (hue + 10) % 100;
-                    ++l
-                }
-                }, k * 200)
-                /*
-                for (let i = 1; i < path.length; ++i) {
-                    const [r, g, b] = hslRGB(hue / 360, sat, light);
-                    ctx.beginPath();
-                    ctx.strokeStyle = `rgb(${r}, ${g}, ${b})`;
-                    ctx.moveTo(path[i - 1][0], path[i - 1][1]);
-                    ctx.lineTo(path[i][0], path[i][1]);
-                    ctx.stroke();
-                    ctx.closePath();
-
-                    hue = (hue + 10) % 44;
-                }
-                */
+                // hue = (hue + 10) % 100;
+                hue = 180 + (hue + (1 / total * 180)) % 180;
             }
         }
     }
-
-    draw(1);
+    draw(mode);
 })
